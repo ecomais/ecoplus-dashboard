@@ -6,9 +6,6 @@ LABEL maintainer="Volkov Labs <support@volkovlabs.io>" \
       description="Customized Grafana image for Business Suite" \
       version="12.0.0"
 
-# Set working directory to avoid cluttering root
-WORKDIR /app
-
 # Switch to root user for system-level operations
 USER root
 
