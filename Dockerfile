@@ -2,8 +2,8 @@
 FROM grafana/grafana-oss:12.1.0
 
 # Label the image for better tracking and metadata
-LABEL maintainer="Volkov Labs <support@volkovlabs.io>" \
-      description="Customized Grafana image for Business Suite" \
+LABEL maintainer="Anderson Fontes <anderson.f@ecoautomacao.com.br>" \
+      description="ECO+ Dashboard Suite" \
       version="12.1.0"
 
 # Switch to root user for system-level operations
@@ -53,8 +53,8 @@ RUN find /usr/share/grafana/public/build/static/img -type f -name 'g8_login_ligh
 # HTML & JS CUSTOMIZATION - Update titles, menus, and branding
 ##################################################################
 # Update title and loading text in index.html
-RUN sed -i 's|<title>\[\[.AppTitle\]\]</title>|<title>Business Suite</title>|g' /usr/share/grafana/public/views/index.html && \
-    sed -i 's|Loading Grafana|Loading Business Suite|g' /usr/share/grafana/public/views/index.html
+RUN sed -i 's|<title>\[\[.AppTitle\]\]</title>|<title>ECO+ Dashboard</title>|g' /usr/share/grafana/public/views/index.html && \
+    sed -i 's|Loading Grafana|Loading ECO+ Dashboard|g' /usr/share/grafana/public/views/index.html
 
 # Customize Mega and Help menu in index.html
 RUN sed -i "s|\[\[.NavTree\]\],|nav,|g; \
@@ -75,8 +75,8 @@ RUN sed -i "s|\[\[.NavTree\]\],|nav,|g; \
 
 # Update JavaScript files for branding and feature toggles
 RUN find /usr/share/grafana/public/build/ -name "*.js" -type f \
-    -exec sed -i 's|AppTitle="Grafana"|AppTitle="Business Suite"|g' {} \; \
-    -exec sed -i 's|LoginTitle="Welcome to Grafana"|LoginTitle="Business Suite for Grafana"|g' {} \; \
+    -exec sed -i 's|AppTitle="Grafana"|AppTitle="ECO+ Dashboard"|g' {} \; \
+    -exec sed -i 's|LoginTitle="Welcome to Grafana"|LoginTitle="Plataforma ECO+ Dashboard"|g' {} \; \
     -exec sed -i 's|\[{target:"_blank",id:"documentation".*grafana_footer"}\]|\[\]|g' {} \; \
     -exec sed -i 's|({target:"_blank",id:"license",.*licenseUrl})|()|g' {} \; \
     -exec sed -i 's|({target:"_blank",id:"version",text:..versionString,url:.?"https://github.com/grafana/grafana/blob/main/CHANGELOG.md":void 0})|()|g' {} \; \
@@ -84,7 +84,7 @@ RUN find /usr/share/grafana/public/build/ -name "*.js" -type f \
     -exec sed -i 's|.push({target:"_blank",id:"version",text:`${..edition}${.}`,url:..licenseUrl,icon:"external-link-alt"})||g' {} \;
 
 # Update feature toggles in configuration
-RUN sed -i 's|\[feature_toggles\]|\[feature_toggles\]\npinNavItems=false\nonPremToCloudMigrations=false\ncorrelations=false|g' /usr/share/grafana/conf/defaults.ini
+RUN sed -i 's|\[feature_toggles\]|\[feature_toggles\]\npinNavItems = false\nonPremToCloudMigrations = false\ncorrelations = false|g' /usr/share/grafana/conf/defaults.ini
 
 ##################################################################
 # CLEANUP - Remove unused data sources and panels
@@ -99,8 +99,8 @@ RUN rm -rf \
     /usr/share/grafana/public/build/opentsdb* \
     /usr/share/grafana/public/app/plugins/datasource/influxdb \
     /usr/share/grafana/public/build/influxdb* \
-    /usr/share/grafana/public/app/plugins/datasource/mssql \
-    /usr/share/grafana/public/build/mssql* \
+    # /usr/share/grafana/public/app/plugins/datasource/mssql \
+    # /usr/share/grafana/public/build/mssql* \
     /usr/share/grafana/public/app/plugins/datasource/mysql \
     /usr/share/grafana/public/build/mysql* \
     /usr/share/grafana/public/app/plugins/datasource/tempo \
@@ -109,8 +109,8 @@ RUN rm -rf \
     /usr/share/grafana/public/build/jaeger* \
     /usr/share/grafana/public/app/plugins/datasource/zipkin \
     /usr/share/grafana/public/build/zipkin* \
-    /usr/share/grafana/public/app/plugins/datasource/azuremonitor \
-    /usr/share/grafana/public/build/azureMonitor* \
+    # /usr/share/grafana/public/app/plugins/datasource/azuremonitor \
+    # /usr/share/grafana/public/build/azureMonitor* \
     /usr/share/grafana/public/app/plugins/datasource/cloudwatch \
     /usr/share/grafana/public/build/cloudwatch* \
     /usr/share/grafana/public/app/plugins/datasource/cloud-monitoring \
@@ -129,11 +129,11 @@ RUN find /usr/share/grafana/public/build/ -name "*.js" -type f \
 
 # Remove native panels
 RUN rm -rf \
-    /usr/share/grafana/public/app/plugins/panel/alertlist \
+    # /usr/share/grafana/public/app/plugins/panel/alertlist \
     /usr/share/grafana/public/app/plugins/panel/annolist \
     /usr/share/grafana/public/app/plugins/panel/dashlist \
     /usr/share/grafana/public/app/plugins/panel/news \
-    /usr/share/grafana/public/app/plugins/panel/geomap \
+    # /usr/share/grafana/public/app/plugins/panel/geomap \
     /usr/share/grafana/public/app/plugins/panel/table-old \
     /usr/share/grafana/public/app/plugins/panel/traces \
     /usr/share/grafana/public/app/plugins/panel/flamegraph

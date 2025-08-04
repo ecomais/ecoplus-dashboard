@@ -3,7 +3,7 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile
-    image: ghcr.io/volkovlabs/app:latest
+    # image: ghcr.io/ecomais/ecoplus-dashboard:latest
     environment:
       - GF_INSTALL_PLUGINS=marcusolsson-static-datasource
     ports:

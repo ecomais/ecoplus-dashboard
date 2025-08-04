@@ -1,8 +1,8 @@
 {
-  "author": "Volkov Labs",
-  "description": "Business Customization for Grafana",
+  "author": "Anderson Fontes",
+  "description": "ECO+ Dashboard",
   "license": "Apache-2.0",
-  "name": "business-custom",
+  "name": "ecoplus-dashboard",
   "scripts": {
     "start": "docker compose build && docker compose up",
     "stop": "docker compose down"
