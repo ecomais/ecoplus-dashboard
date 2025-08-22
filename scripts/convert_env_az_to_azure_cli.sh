@@ -1,12 +1,35 @@
 #!/bin/bash
-# Script to convert .env-az JSON content to Azure CLI app settings string
+set -euo pipefail
 
-json_file=".env-az"
+env_file="${1:-.env}"
 
-# Read JSON and convert to --settings key=value pairs
-settings=$(jq -r '.[] | "--settings \(.name)=\(.value)"' "$json_file" | tr '\n' ' ')
+# Function to convert .env file to Azure CLI --settings string
+convert_env_file() {
+  local env_file="$1"
+  local line key value
 
-echo "$settings"
+  while IFS= read -r line || [ -n "$line" ]; do
+    # strip CR for CRLF files
+    line=${line%$'\r'}
 
-# Output example
-# --settings GF_SERVER_DOMAIN= --settings GF_SERVER_ROOT_URL=https://%(domain)s --settings GF_PLUGINS_PREINSTALL_SYNC=volkovlabs-echarts-panel,volkovlabs-rss-datasource,volkovlabs-image-panel,marcusolsson-calendar-panel,marcusolsson-dynamictext-panel,volkovlabs-form-panel,volkovlabs-grapi-datasource,volkovlabs-rss-datasource,marcusolsson-static-datasource --settings GF_INSTALL_IMAGE_RENDERER_PLUGIN=true --settings GF_SECURITY_ADMIN_USER=ecoplus_admin --settings GF_SECURITY_ADMIN_PASSWORD= --settings GF_SECURITY_ADMIN_EMAIL=anderson.fontes.eco@gmail.com --settings GF_ANALYTICS_GOOGLE_ANALYTICS_UA_ID= --settings GF_DATABASE_TYPE=postgres --settings GF_DATABASE_HOST=ecoplus.postgres.database.azure.com:5432 --settings GF_DATABASE_NAME= --settings GF_DATABASE_USER= --settings GF_DATABASE_PASSWORD= --settings GF_DATABASE_SSL_MODE=require --settings GF_SMTP_ENABLED=true --settings GF_SMTP_HOST=smtp.gmail.com:587 --settings GF_SMTP_USER=ecoplus.notification@gmail.com --settings GF_SMTP_PASSWORD= --settings GF_SMTP_SKIP_VERIFY=true --settings GF_SMTP_FROM_ADDRESS=ecoplus.notification@gmail.com --settings GF_SMTP_FROM_NAME=Eco+ Notification --settings GF_AUTH_AZURE_ENABLED=false --settings GF_AUTH_AZURE_CLIENT_ID= --settings GF_AUTH_AZURE_CLIENT_SECRET= --settings GF_AUTH_AZURE_SCOPES=openid email profile --settings GF_AUTH_AZURE_AUTH_URL= --settings GF_AUTH_AZURE_TOKEN_URL=
+    # skip blank lines and comments
+    [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
+
+    # match first '=' only: key=rest-of-line
+    if [[ "$line" =~ ^([^=[:space:]]+)[[:space:]]*=(.*)$ ]]; then
+      key="${BASH_REMATCH[1]}"
+      value="${BASH_REMATCH[2]}"
+
+      # optional: trim surrounding quotes on value
+      [[ "$value" =~ ^\"(.*)\"$ ]] && value="${BASH_REMATCH[1]}"
+      [[ "$value" =~ ^\'(.*)\'$ ]] && value="${BASH_REMATCH[1]}"
+
+      # keep the pair as a single argument to preserve spaces
+      printf '%s\n' "--settings" "$key=$value"
+    fi
+  done < "$env_file"
+}
+
+
+# Usage:
+convert_env_file ".env"

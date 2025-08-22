@@ -1,4 +1,4 @@
-name: Docker
+name: Github Container Registry Deployment
 
 on:
   push:
