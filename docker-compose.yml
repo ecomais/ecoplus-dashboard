@@ -4,9 +4,18 @@ services:
       context: ./
       dockerfile: Dockerfile
     # image: ghcr.io/ecomais/ecoplus-dashboard:latest
-    environment:
-      - GF_INSTALL_PLUGINS=marcusolsson-static-datasource
+    env_file:
+      - ./.env
+    # environment:
+      # - GF_DATABASE_URL=postgres://ecoplus_admin:Automacao_Ec14789632@ecoplus.postgres.database.azure.com:5432/ecoplus?sslmode=require&search_path=dashboard
+      # - GF_DATABASE_URL=postgres://ecoplus_admin:Automacao_Ec14789632@ecoplus.postgres.database.azure.com:5432/ecoplus?sslmode=require
+      # - GF_DATABASE_URL=postgres://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}/${DATABASE_NAME}?sslmode=require&search_path=dashboard
+      # - GF_INSTALL_PLUGINS=marcusolsson-static-datasource
     ports:
       - 3000:3000/tcp
-    volumes:
-      - ./provisioning:/etc/grafana/provisioning
+    depends_on:
+      - postgres
+    networks:
+      - app-network
+    # volumes:
+    #   - ./provisioning:/etc/grafana/provisioning

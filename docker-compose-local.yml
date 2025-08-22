@@ -1,0 +1,30 @@
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: ecoplus
+    volumes:
+      # run db init script on first startup
+      - ./db:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    networks:
+      - app-network
+  grafana:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    # image: ghcr.io/ecomais/ecoplus-dashboard:latest
+    env_file:
+      - ./.env-local
+    ports:
+      - 3000:3000/tcp
+    depends_on:
+      - postgres
+    networks:
+      - app-network
+
+networks:
+  app-network:
