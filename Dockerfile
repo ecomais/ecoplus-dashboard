@@ -1,5 +1,4 @@
-# Use a specific version of Grafana OSS as the base image for reproducibility
-FROM grafana/grafana-oss:12.1.1
+FROM grafana/grafana:12.1.1
 
 # Label the image for better tracking and metadata
 LABEL maintainer="Anderson Fontes <anderson.f@ecoautomacao.com.br>" \
@@ -14,28 +13,35 @@ USER root
 ##################################################################
 ENV GF_ENABLE_GZIP=true \
     GF_USERS_DEFAULT_THEME=tron \
-    GF_AUTH_ANONYMOUS_ENABLED=true \
+    GF_AUTH_ANONYMOUS_ENABLED=false \
     GF_AUTH_BASIC_ENABLED=false \
+    GF_AUTH_PASSWORDLESS_ENABLED=true \
     GF_PANELS_DISABLE_SANITIZE_HTML=true \
     GF_ANALYTICS_CHECK_FOR_UPDATES=false \
     GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/etc/grafana/provisioning/dashboards/business.json \
     GF_SNAPSHOTS_ENABLED=false \
-    GF_EXPLORE_ENABLED=false \
+    GF_EXPLORE_ENABLED=true \
     GF_NEWS_NEWS_FEED_ENABLED=false \
-    GF_ALERTING_ENABLED=false \
+    GF_ALERTING_ENABLED=true \
     GF_PUBLIC_DASHBOARDS_ENABLED=true \
-    GF_UNIFIED_ALERTING_ENABLED=false \
+    GF_UNIFIED_ALERTING_ENABLED=true \
 #    GF_PLUGINS_PREINSTALL_DISABLED=true \
     GF_PATHS_ROOT=/etc/grafana \
     GF_PATHS_PROVISIONING=/etc/grafana/provisioning \
-    GF_PATHS_PLUGINS=/var/lib/grafana/plugins
-#    GF_FEATURE_TOGGLES_ENABLE="kubernetesDashboards dashboardNewLayouts"
+    GF_PATHS_PLUGINS=/var/lib/grafana/plugins \
+    # GF_PLUGINS_PREINSTALL_SYNC=volkovlabs-echarts-panel,volkovlabs-rss-datasource,volkovlabs-image-panel,marcusolsson-calendar-panel,marcusolsson-dynamictext-panel,volkovlabs-form-panel,volkovlabs-grapi-datasource,volkovlabs-rss-datasource,marcusolsson-static-datasource \
+    GF_INSTALL_IMAGE_RENDERER_PLUGIN=true \
+    GF_LOG_LEVEL=debug \
+    GF_FEATURE_TOGGLES_ENABLE="provisioning kubernetesDashboards dashboardNewLayouts"
 
 # Copy `grafana.ini` settings file
 COPY --chown=grafana:root ./grafana.ini ${GF_PATHS_ROOT}/grafana.ini
 
 # Copy provisioning files with proper ownership
 COPY --chown=grafana:root provisioning/ ${GF_PATHS_PROVISIONING}/
+
+# Copy email files with proper ownership
+COPY --chown=grafana:root emails/ /usr/share/grafana/public/emails/
 
 ##################################################################
 # VISUAL CUSTOMIZATION - Replace branding assets
@@ -54,6 +60,18 @@ RUN find /usr/share/grafana/public/build/static/img -type f -name 'g8_login_dark
 RUN find /usr/share/grafana/public/build/static/img -type f -name 'g8_login_light.*.svg' -exec sh -c 'mv /tmp/background.svg "$(dirname {})/$(basename {})" && chmod 644 "$(dirname {})/$(basename {})"' \;
 
 ##################################################################
+# PLUGINS PROVISIONING - Install additional plugins
+##################################################################
+RUN grafana-cli plugins install volkovlabs-echarts-panel && \
+    grafana-cli plugins install volkovlabs-rss-datasource && \
+    grafana-cli plugins install volkovlabs-image-panel && \
+    grafana-cli plugins install marcusolsson-calendar-panel && \
+    grafana-cli plugins install marcusolsson-dynamictext-panel && \
+    grafana-cli plugins install volkovlabs-form-panel && \
+    grafana-cli plugins install volkovlabs-grapi-datasource && \
+    grafana-cli plugins install marcusolsson-static-datasource
+
+##################################################################
 # HTML & JS CUSTOMIZATION - Update titles, menus, and branding
 ##################################################################
 # Update title and loading text in index.html
@@ -69,7 +87,7 @@ RUN sed -i "s|\[\[.NavTree\]\],|nav,|g; \
     const connections = nav.find((element) => element.id === 'connections'); \
     if (connections) { connections['url'] = '/datasources'; connections['children'].shift(); } \
     const help = nav.find((element) => element.id === 'help'); \
-    if (help) { help['subTitle'] = 'Business Customization 12.1.1'; help['children'] = [];} \
+    if (help) { help['subTitle'] = 'ECO+ Dashboard 12.1.1'; help['children'] = [];} \
     window.grafanaBootData = {|g" \
     /usr/share/grafana/public/views/index.html && \
     sed -i "s|window.grafanaBootData = {| \
@@ -96,18 +114,18 @@ RUN sed -i 's|\[feature_toggles\]|\[feature_toggles\]\npinNavItems = false\nonPr
 RUN rm -rf \
     /usr/share/grafana/public/app/plugins/datasource/elasticsearch \
     /usr/share/grafana/public/build/elasticsearch* \
-    /usr/share/grafana/public/app/plugins/datasource/graphite \
-    /usr/share/grafana/public/build/graphite* \
+    # /usr/share/grafana/public/app/plugins/datasource/graphite \
+    # /usr/share/grafana/public/build/graphite* \
     /usr/share/grafana/public/app/plugins/datasource/opentsdb \
     /usr/share/grafana/public/build/opentsdb* \
     /usr/share/grafana/public/app/plugins/datasource/influxdb \
     /usr/share/grafana/public/build/influxdb* \
     # /usr/share/grafana/public/app/plugins/datasource/mssql \
     # /usr/share/grafana/public/build/mssql* \
-    /usr/share/grafana/public/app/plugins/datasource/mysql \
-    /usr/share/grafana/public/build/mysql* \
-    /usr/share/grafana/public/app/plugins/datasource/tempo \
-    /usr/share/grafana/public/build/tempo* \
+    # /usr/share/grafana/public/app/plugins/datasource/mysql \
+    # /usr/share/grafana/public/build/mysql* \
+    # /usr/share/grafana/public/app/plugins/datasource/tempo \
+    # /usr/share/grafana/public/build/tempo* \
     /usr/share/grafana/public/app/plugins/datasource/jaeger \
     /usr/share/grafana/public/build/jaeger* \
     /usr/share/grafana/public/app/plugins/datasource/zipkin \
@@ -148,7 +166,10 @@ USER grafana
 
 # Healthcheck to ensure Grafana is running
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:3000/api/health || exit 1
+    CMD curl -f 0.0.0.0/api/health || exit 1
+    # CMD curl -f http://localhost:3000/api/health || exit 1
 
+# RUN grafana-cli plugins install grafana-image-renderer
+    
 # Expose Grafana default port
 EXPOSE 3000

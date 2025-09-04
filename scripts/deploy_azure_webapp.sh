@@ -8,7 +8,8 @@
 #   -n myAppName \
 #   -i docker.io/ecomais/ecoplus-dashboard:latest \
 #   -l eastus \
-#   -t "env=production ecoplus-products=dashboard"
+#   -t "env=dev ecoplus-products=dashboard"
+# ./scripts/deploy_azure_webapp.sh -g ecoplus-production -n dashboard-dev -i docker.io/ecomais/ecoplus-dashboard:latest -l eastus -t "env=dev ecoplus-products=dashboard"
 
 set -euo pipefail
 
@@ -52,52 +53,59 @@ if [ -n "$TAGS" ]; then
 fi
 
 
-# # Check if resource group exists, create if not
-# if ! az group show --name "$RESOURCE_GROUP" &> /dev/null; then
-#   echo "Creating resource group $RESOURCE_GROUP in $LOCATION..."
-#   az group create --name "$RESOURCE_GROUP" --location "$LOCATION"
-# fi
+# Check if resource group exists, create if not
+if ! az group show --name "$RESOURCE_GROUP" &> /dev/null; then
+  echo "Creating resource group $RESOURCE_GROUP in $LOCATION..."
+  az group create --name "$RESOURCE_GROUP" --location "$LOCATION"
+  echo "group create --name "$RESOURCE_GROUP" --location "$LOCATION""
+fi
 
-# # Create or update App Service plan if needed
-# if ! az appservice plan show --name "$APP_NAME-plan" --resource-group "$RESOURCE_GROUP" &> /dev/null; then
-#   echo "Creating App Service plan $APP_NAME-plan..."
-#   az appservice plan create --name "$APP_NAME-plan" --resource-group "$RESOURCE_GROUP" --sku B1 --is-linux
-# fi
+# Create or update App Service plan if needed
+if ! az appservice plan show --name "$APP_NAME-plan" --resource-group "$RESOURCE_GROUP" &> /dev/null; then
+  echo "Creating App Service plan $APP_NAME-plan..."
+  az appservice plan create --name "$APP_NAME-plan" --resource-group "$RESOURCE_GROUP" --sku B1 --is-linux
+  echo "appservice plan create --name "$APP_NAME-plan" --resource-group "$RESOURCE_GROUP" --sku B1 --is-linux"
+fi
 
-# # Check if app exists
-# if az webapp show --resource-group "$RESOURCE_GROUP" --name "$APP_NAME" &> /dev/null; then
-#   echo "Web App $APP_NAME exists. Updating configuration..."
-# else
-#   echo "Creating Web App $APP_NAME..."
-#   az webapp create --resource-group "$RESOURCE_GROUP" --plan "$APP_NAME-plan" --name "$APP_NAME" --deployment-container-image-name "$CONTAINER_IMAGE"
-# fi
+# Check if app exists
+if az webapp show --resource-group "$RESOURCE_GROUP" --name "$APP_NAME" &> /dev/null; then
+  echo "Web App $APP_NAME exists. Updating configuration..."
+else
+  echo "Creating Web App $APP_NAME..."
+  az webapp create --resource-group "$RESOURCE_GROUP" --plan "$APP_NAME-plan" --name "$APP_NAME" --deployment-container-image-name "$CONTAINER_IMAGE"
+  echo "webapp create --resource-group "$RESOURCE_GROUP" --plan "$APP_NAME-plan" --name "$APP_NAME" --deployment-container-image-name "$CONTAINER_IMAGE""
+fi
 
-# # Configure container settings
-# echo "Configuring container settings..."
-# az webapp config container set --name "$APP_NAME" --resource-group "$RESOURCE_GROUP" --docker-custom-image-name "$CONTAINER_IMAGE"
+# Configure container settings
+echo "Configuring container settings..."
+az webapp config container set --name "$APP_NAME" --resource-group "$RESOURCE_GROUP" --container-image-name "$CONTAINER_IMAGE"
+echo "webapp config container set --name "$APP_NAME" --resource-group "$RESOURCE_GROUP" --container-image-name "$CONTAINER_IMAGE""
 
-# # # Set app settings
-# # if [ -n "$APP_SETTINGS" ]; then
-# #   echo "Setting app settings..."
-# #   az webapp config appsettings set --resource-group "$RESOURCE_GROUP" --name "$APP_NAME" $APP_SETTINGS
-# # fi
-
-# # Set app settings using the array
-# if ((${#APP_SETTINGS_ARGS[@]} > 0)); then
+# # Set app settings
+# if [ -n "$APP_SETTINGS" ]; then
 #   echo "Setting app settings..."
-#   az webapp config appsettings set \
-#     --resource-group "$RESOURCE_GROUP" \
-#     --name "$APP_NAME" \
-#     "${APP_SETTINGS_ARGS[@]}"
+#   az webapp config appsettings set --resource-group "$RESOURCE_GROUP" --name "$APP_NAME" $APP_SETTINGS
 # fi
 
-# # Apply tags if provided
-# if [ -n "$TAGS" ]; then
-#   echo "Applying tags to the Web App..."
-#   az resource tag --resource-group "$RESOURCE_GROUP" --resource-type "Microsoft.Web/sites" --name "$APP_NAME" --tags $TAGS
-# fi
+# Set app settings using the array
+if ((${#APP_SETTINGS[@]} > 0)); then
+  echo "Setting app settings..."
+  az webapp config appsettings set \
+    --resource-group "$RESOURCE_GROUP" \
+    --name "$APP_NAME" \
+    --settings "${APP_SETTINGS[@]}"
+  echo "webapp config appsettings set --resource-group "$RESOURCE_GROUP" --name "$APP_NAME" --settings "${APP_SETTINGS[@]}""
+fi
 
-# echo "Restarting Web App..."
-# az webapp restart --name "$APP_NAME" --resource-group "$RESOURCE_GROUP"
+# Apply tags if provided
+if [ -n "$TAGS" ]; then
+  echo "Applying tags to the Web App..."
+  az resource tag --resource-group "$RESOURCE_GROUP" --resource-type "Microsoft.Web/sites" --name "$APP_NAME" --tags $TAGS
+  echo "resource tag --resource-group "$RESOURCE_GROUP" --resource-type "Microsoft.Web/sites" --name "$APP_NAME" --tags $TAGS"
+fi
+
+echo "Restarting Web App..."
+az webapp restart --name "$APP_NAME" --resource-group "$RESOURCE_GROUP"
+echo "webapp restart --name "$APP_NAME" --resource-group "$RESOURCE_GROUP""
 
 echo "Deployment complete."

@@ -25,7 +25,7 @@ convert_env_file() {
       [[ "$value" =~ ^\'(.*)\'$ ]] && value="${BASH_REMATCH[1]}"
 
       # keep the pair as a single argument to preserve spaces
-      printf '%s\n' "--settings" "$key=$value"
+      printf '%s\n' "$key=$value"
     fi
   done < "$env_file"
 }

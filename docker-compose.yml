@@ -1,21 +1,37 @@
 services:
+  postgres:
+  # Local PostgreSQL for development and testing
+    image: postgres:17
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: ecoplus
+    ports:
+      - "5432:5432"
+    # volumes:
+    #   - ./db:/docker-entrypoint-initdb.d
+      # - db_data:/var/lib/postgresql/data
+    networks:
+      - app-network
   grafana:
     build:
       context: ./
       dockerfile: Dockerfile
-    # image: ghcr.io/ecomais/ecoplus-dashboard:latest
     env_file:
-      - ./.env
-    # environment:
-      # - GF_DATABASE_URL=postgres://ecoplus_admin:Automacao_Ec14789632@ecoplus.postgres.database.azure.com:5432/ecoplus?sslmode=require&search_path=dashboard
-      # - GF_DATABASE_URL=postgres://ecoplus_admin:Automacao_Ec14789632@ecoplus.postgres.database.azure.com:5432/ecoplus?sslmode=require
-      # - GF_DATABASE_URL=postgres://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}/${DATABASE_NAME}?sslmode=require&search_path=dashboard
-      # - GF_INSTALL_PLUGINS=marcusolsson-static-datasource
+      - .env
     ports:
       - 3000:3000/tcp
     depends_on:
       - postgres
+    # volumes:
+    #   - dashboard_data:/var/lib/grafana
     networks:
       - app-network
-    # volumes:
-    #   - ./provisioning:/etc/grafana/provisioning
+
+# volumes:
+#   db_data:
+#   dashboard_data:
+
+networks:
+  app-network:
+    driver: bridge

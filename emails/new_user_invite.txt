@@ -1,0 +1,9 @@
+{{HiddenSubject .Subject "{{.InvitedBy}} te convidou para acessar ECO+ Dashboard"}}
+
+You're invited to join {{.OrgName}}
+
+You've been invited to join the {{.OrgName}} organization by {{.InvitedBy}}. To accept your invitation and join the team, copy and paste the link below into your browser directly:
+
+{{.LinkUrl}}
+
+Sent by ECO+ Dashboard v{{.BuildVersion}} (c) {{now | date "2020"}} ECO+ Dashboard

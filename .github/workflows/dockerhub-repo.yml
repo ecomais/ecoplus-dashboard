@@ -9,7 +9,8 @@ on:
 env:
   IMAGE_NAME: ecomais/ecoplus-dashboard
   TAG_LATEST: latest
-  TAG_VERSION: ${{ github.sha }}
+  TAG_VERSION: v12.1.1
+  TAG_SHA: ${{ github.sha }}
 
 jobs:
   build:
@@ -36,10 +37,11 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
           push: true
           tags: |
             docker.io/${{ env.IMAGE_NAME }}:${{ env.TAG_LATEST }}
             docker.io/${{ env.IMAGE_NAME }}:${{ env.TAG_VERSION }}
+            docker.io/${{ env.IMAGE_NAME }}:${{ env.TAG_SHA }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

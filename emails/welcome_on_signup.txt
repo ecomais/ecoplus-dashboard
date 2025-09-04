@@ -1,0 +1,14 @@
+{{HiddenSubject .Subject "Bem vindo(a) ao ECO+ Dashboard"}}
+
+Hi {{.Name}},
+
+Welcome! Ready to start building some beautiful metric and analytic dashboards?
+
+If you are new to ECO+ Dashboard, refer to the Getting started with ECO+ Dashboard guide on https://grafana.com/docs/grafana/latest/getting-started/getting-started/.
+
+Thank you for joining our community.
+
+The ECO+ Dashboard team
+
+
+Sent by ECO+ Dashboard v{{.BuildVersion}} (c) {{now | date "2020"}} ECO+ Dashboard
